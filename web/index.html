@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f35"><title>Reencontra · Achados e perdidos</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header><a class="brand" href="/">↳ <span>reencontra<small>ACHADOS & PERDIDOS DO CAMPUS</small></span></a><span class="tag">EDA2 · Árvores na prática</span></header>
+  <main>
+    <section class="hero"><div><p class="eyebrow">MENOS OBJETOS PERDIDOS. MAIS REENCONTROS.</p><h1>O caminho de volta<br>começa aqui.</h1><p>Encontre o que ficou pelo campus e ajude cada objeto a voltar para o seu dono.</p></div><div class="hero-mark" aria-hidden="true">⌕<span>Procurar. Cuidar. Devolver.</span></div></section>
+    <nav aria-label="Seções"><button class="tab active" data-panel="objects" aria-selected="true">01 / Balcão de objetos</button><button class="tab" data-panel="laboratory" aria-selected="false">02 / Laboratório de árvores</button></nav>
+    <div id="notice" role="status" aria-live="polite"></div>
+    <section id="objects">
+      <div class="stats" id="stats"></div>
+      <div class="workspace"><aside class="card"><p class="eyebrow">MAPA DO CAMPUS</p><h2>Onde foi encontrado?</h2><p class="muted">Selecionar um local inclui todos os seus descendentes.</p><div id="locations"></div><div class="aside-note">↳ Árvore n-ária + percurso DFS</div></aside>
+        <div><div class="section-heading"><div><p class="eyebrow">CUIDANDO DO QUE É SEU</p><h2>Objetos no balcão</h2></div><button id="new-item" class="primary">+ Registrar objeto</button></div>
+          <form id="filters" class="filters"><label>Buscar pelo início do nome<input id="search" placeholder="Ex.: gar, ócu, calc…" maxlength="80" type="search"></label><label>Prazo até<input id="until" type="date"></label><label>Situação<select id="status"><option value="guardado">Guardados</option><option value="devolvido">Devolvidos</option><option value="todos">Todos</option></select></label><button type="reset" class="subtle">Limpar</button></form>
+          <div class="section-heading"><p class="muted" id="result-count"></p><a id="export-csv" class="export-link" href="/api/export">↓ Exportar CSV</a></div><div id="items" class="items" aria-live="polite"></div>
+          <details class="card index-tree"><summary>Ver o índice AVL de prazos</summary><p class="muted">Cada nó mostra prazo e identificador. Somente objetos guardados entram neste índice. BF é o fator de balanceamento.</p><div id="live-tree" class="tree-scroll"></div></details>
+        </div>
+      </div>
+    </section>
+    <section id="laboratory" hidden>
+      <div class="section-heading"><div><p class="eyebrow">APRENDA EXPERIMENTANDO</p><h2>Uma árvore que encontra o equilíbrio.</h2><p class="muted">Insira números em sequência e acompanhe cada rotação da AVL.</p></div></div>
+      <div class="card"><form id="lab-form" class="lab-form"><label>Sequência de inteiros (até 31)<input id="sequence" value="30, 20, 10, 25, 28, 40, 50" required></label><button class="primary">Construir árvore</button></form><div class="presets"><button data-values="30,20,10">Rotação LL</button><button data-values="10,20,30">Rotação RR</button><button data-values="30,10,20">Rotação LR</button><button data-values="10,30,20">Rotação RL</button><button data-values="1,2,3,4,5,6,7,8,9,10">Entrada ordenada</button></div><div class="playback"><button id="prev">← Anterior</button><strong id="step-label">Construa uma árvore para começar.</strong><button id="next">Próximo →</button></div><div id="lab-tree" class="tree-scroll"></div><p id="lab-summary" class="muted"></p></div>
+      <div class="explain-grid"><article class="card"><h3>AVL · Prazos de retirada</h3><p>O percurso em ordem lista os objetos por prazo. A busca por intervalo poda ramos fora do limite.</p><code>Inserir / remover: O(log n)</code></article><article class="card"><h3>Trie · Busca por prefixo</h3><p>Cada caractere segue uma aresta. “gar” encontra garrafa sem comparar o início de cada nome.</p><code>Busca: O(p + s + k)</code></article><article class="card"><h3>N-ária · Locais do campus</h3><p>Campus → Bloco A → Laboratório. DFS recupera a subárvore inteira para filtrar os objetos.</p><code>Percurso: O(v)</code></article></div>
+    </section>
+  </main>
+  <footer>Reencontra · Dados fictícios · Estruturas de Dados 2 <span>Um objeto. Um caminho de volta.</span></footer>
+  <dialog id="item-dialog"><form id="item-form"><div class="section-heading"><h2 id="dialog-title">Registrar objeto</h2><button type="button" id="close-dialog" aria-label="Fechar">✕</button></div><label>Nome<input name="name" maxlength="80" required placeholder="Ex.: Mochila azul"></label><label>Descrição<textarea name="description" maxlength="300" required placeholder="Características que ajudam a identificar"></textarea></label><label>Local encontrado<select name="location" id="form-location" required></select></label><label>Prazo de retirada<input name="deadline" type="date" required></label><p class="muted">Use apenas características do objeto; a demonstração não precisa de dados pessoais.</p><p id="form-error" role="alert"></p><button class="primary" id="save-item">Salvar objeto</button></form></dialog>
+  <script type="module" src="/app.js"></script>
+</body></html>
