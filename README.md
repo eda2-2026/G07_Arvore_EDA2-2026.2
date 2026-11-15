@@ -151,14 +151,6 @@ Nesse caso, abra `http://localhost:8080`.
 
 **Já usava a versão com poucos dados?** Execute `python iniciar.py --populate`. A complementação preserva os cadastros existentes, não duplica a base ao repetir o comando e não exige apagar o JSON. Em um clone novo, os 12.000 registros já são criados automaticamente com `python iniciar.py`.
 
-
-<div align="center">
-  <h2>🔐 Login demonstrativo</h2>
-</div>
-
-O acesso é direto, **sem login**, para facilitar a execução e a apresentação. O servidor fica restrito ao computador local. Use dados fictícios: esta aplicação acadêmica não possui autenticação ou recursos de implantação pública.
-
-
 <div align="center">
   <h2>📊 Algoritmos</h2>
 </div>
@@ -181,6 +173,36 @@ O acesso é direto, **sem login**, para facilitar a execução e a apresentaçã
 As estruturas são implementadas manualmente. Cadastrar, editar, devolver e excluir atualizam os índices diretamente, inclusive com remoções na AVL e poda na Trie. A persistência regrava o JSON inteiro; o custo total de uma alteração é **O(B + n + m + log n)**, sendo `B` o tamanho do arquivo e `m` o tamanho dos nomes envolvidos. A consulta de devolvidos/todos usa ordenação nativa, pois esses resultados não estão integralmente na AVL. As complexidades da tabela descrevem os algoritmos isolados; a requisição também aplica filtros, pagina os resultados e produz um snapshot limitado a até sete níveis.
 
 Detalhes, métricas e limitações: [`docs/algoritmos.md`](docs/algoritmos.md).
+
+<div align="center">
+  <h2>🧑‍💻 Estrutura do projeto</h2>
+</div>
+
+```text
+.
+├── iniciar.py                # Comando único de execução
+├── README.md
+├── .gitignore
+├── app/                      # Servidor, serviço, validação e persistência
+│   └── structures/           # AVL, Trie e árvore de locais
+├── web/                      # Interface e visualização das árvores
+├── data/                     # Orientação e JSON gerado localmente
+├── docs/                     # Algoritmos, roteiro e testes
+└── tests/                    # Testes de estruturas, serviço e HTTP
+```
+
+
+<div align="center">
+  <h2>🧪 Testes</h2>
+</div>
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+A suíte verifica rotações, remoções, balanceamento, consultas por intervalo, estatísticas de ordem, acentos, prefixos, hierarquia, paginação, população da base, validação, persistência, concorrência, benchmark e rotas HTTP. Um teste executa **2.500 operações aleatórias determinísticas** e verifica os invariantes da AVL após cada operação. Outros comparam rank/seleção com um conjunto ordenado e conferem todos os 12.000 registros por categoria.
+
+Os testes usam arquivos temporários e não modificam a base da aplicação. Escopo completo: [`docs/testes.md`](docs/testes.md). Sugestão de demonstração: [`docs/roteiro.md`](docs/roteiro.md).
 
 
 <div align="center">
@@ -217,33 +239,3 @@ Detalhes, métricas e limitações: [`docs/algoritmos.md`](docs/algoritmos.md).
   </table>
 </div>
 
-
-<div align="center">
-  <h2>🧑‍💻 Estrutura do projeto</h2>
-</div>
-
-```text
-.
-├── iniciar.py                # Comando único de execução
-├── README.md
-├── .gitignore
-├── app/                      # Servidor, serviço, validação e persistência
-│   └── structures/           # AVL, Trie e árvore de locais
-├── web/                      # Interface e visualização das árvores
-├── data/                     # Orientação e JSON gerado localmente
-├── docs/                     # Algoritmos, roteiro e testes
-└── tests/                    # Testes de estruturas, serviço e HTTP
-```
-
-
-<div align="center">
-  <h2>🧪 Testes</h2>
-</div>
-
-```sh
-python -m unittest discover -s tests -v
-```
-
-A suíte verifica rotações, remoções, balanceamento, consultas por intervalo, estatísticas de ordem, acentos, prefixos, hierarquia, paginação, população da base, validação, persistência, concorrência, benchmark e rotas HTTP. Um teste executa **2.500 operações aleatórias determinísticas** e verifica os invariantes da AVL após cada operação. Outros comparam rank/seleção com um conjunto ordenado e conferem todos os 12.000 registros por categoria.
-
-Os testes usam arquivos temporários e não modificam a base da aplicação. Escopo completo: [`docs/testes.md`](docs/testes.md). Sugestão de demonstração: [`docs/roteiro.md`](docs/roteiro.md).
