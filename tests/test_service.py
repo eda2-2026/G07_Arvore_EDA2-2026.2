@@ -67,7 +67,7 @@ class ServiceTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name) / 'items.json'
-        self.service = Service(Storage(self.path))
+        self.service = Service(Storage(self.path, demo=True))
 
     def test_crud_and_persistence(self):
         item = self.service.create(PAYLOAD)

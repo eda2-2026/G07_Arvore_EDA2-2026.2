@@ -19,9 +19,9 @@ class HTTPTests(unittest.TestCase):
         before = original.read_bytes() if original.exists() else None
         created = []
         real_make = server_module.make_server
-        def capture(port, data_path):
+        def capture(port, data_path, **options):
             created.append(Path(data_path))
-            result = real_make(port, data_path)
+            result = real_make(port, data_path, **options)
             self.assertEqual(len(json.loads(Path(data_path).read_text(encoding='utf-8'))), 9)
             return result
         with patch('sys.argv', ['iniciar.py', '--demo', '--port', '0']), redirect_stdout(io.StringIO()), \
@@ -35,7 +35,7 @@ class HTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp = tempfile.TemporaryDirectory()
-        cls.server = make_server(0, Path(cls.temp.name) / 'items.json')
+        cls.server = make_server(0, Path(cls.temp.name) / 'items.json', demo=True)
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
         cls.url = f'http://127.0.0.1:{cls.server.server_port}'
@@ -55,7 +55,7 @@ class HTTPTests(unittest.TestCase):
             return response.status, response.read(), response.headers
 
     def test_assets(self):
-        for path in ('/', '/styles.css', '/app.js', '/api.js', '/tree.js', '/lab.js', '/favicon.svg'):
+        for path in ('/', '/styles.css', '/app.js', '/api.js', '/tree.js', '/lab.js', '/benchmark.js', '/favicon.svg'):
             with self.subTest(path=path):
                 status, body, headers = self.call(path)
                 self.assertEqual(status, 200)
@@ -109,3 +109,16 @@ class HTTPTests(unittest.TestCase):
         self.assertIn('javascript', self.call('/app.js')[2]['Content-Type'])
         self.assertEqual(self.call('/%00')[0], 404)
         self.assertEqual(self.call('/api/items/invalid/edit', PAYLOAD)[0], 400)
+
+    def test_advanced_routes_and_pagination_validation(self):
+        status, body, _ = self.call('/api/items?page=1&page_size=2&category=Garrafas&depth=2')
+        self.assertEqual(status, 200)
+        self.assertEqual(len(json.loads(body)['items']), 2)
+        self.assertEqual(json.loads(body)['total'], 2)
+        self.assertEqual(self.call('/api/items?page=0')[0], 400)
+        self.assertEqual(self.call('/api/items?depth=99')[0], 400)
+        status, body, _ = self.call('/api/benchmark', {'size': 100, 'scenario': 'sorted'})
+        self.assertEqual(status, 200)
+        self.assertTrue(json.loads(body)['verified'])
+        self.assertEqual(self.call('/api/benchmark', {'size': 999999})[0], 400)
+        self.assertEqual(self.call('/api/lab', {'values': [3, 2, 1], 'removals': [2], 'target': 1})[0], 200)

@@ -4,6 +4,7 @@ from app.structures.avl import AVL
 from app.structures.trie import Trie
 from app.structures.locations import LOCATIONS, descendants
 from app.validation import validate
+from app.categories import CATEGORIES
 
 
 class Service:
@@ -34,11 +35,17 @@ class Service:
             if current['status'] == 'guardado':
                 self.avl.insert((current['deadline'], current['id']))
 
-    def listing(self, prefix='', location='Campus', until='9999-12-31', status='guardado'):
+    def listing(self, prefix='', location='Campus', until='9999-12-31', status='guardado',
+                category='', page=None, page_size=24, depth=5):
         with self.lock:
             if status not in ('guardado', 'devolvido', 'todos'):
                 raise ValueError('Situação inválida.')
             until = date.fromisoformat(until).isoformat()
+            if category and category not in (*CATEGORIES, 'Outros'):
+                raise ValueError('Categoria inválida.')
+            depth = int(depth)
+            if not 1 <= depth <= 7:
+                raise ValueError('A profundidade visual deve estar entre 1 e 7.')
             places = descendants(location)
             ids, trie_visits = self.trie.prefix(prefix)
             if status == 'guardado':
@@ -48,10 +55,26 @@ class Service:
                 avl_visits = 0
                 candidates = sorted(self.by_id.values(), key=lambda x: (x['deadline'], x['id']))
             items = [dict(x) for x in candidates if x['id'] in ids and x['location'] in places
-                     and x['deadline'] <= until and (status == 'todos' or x['status'] == status)]
-            return dict(items=items, metrics=dict(avlVisited=avl_visits, trieVisited=trie_visits,
+                     and x['deadline'] <= until and (status == 'todos' or x['status'] == status)
+                     and (not category or x['category'] == category)]
+            total = len(items)
+            pages, current_page = 1, 1
+            if page is not None:
+                current_page, page_size = int(page), int(page_size)
+                if current_page < 1 or not 1 <= page_size <= 100:
+                    raise ValueError('Página deve ser positiva e tamanho entre 1 e 100.')
+                pages = max(1, (total + page_size - 1) // page_size)
+                current_page = min(current_page, pages)
+                start = (current_page - 1) * page_size
+                items = items[start:start + page_size]
+            count = self.avl.root.size if self.avl.root else 0
+            median = self.by_id[self.avl.select((count - 1) // 2)[1]] if count else None
+            return dict(items=items, total=total, pagination=dict(page=current_page, pages=pages, pageSize=page_size),
+                        categories=CATEGORIES, summary=dict(total=len(self.by_id), guardados=count,
+                        devolvidos=len(self.by_id) - count, medianDeadline=median['deadline'] if median else None),
+                        metrics=dict(avlVisited=avl_visits, trieVisited=trie_visits,
                         height=self.avl.root.height if self.avl.root else 0,
-                        rotations=self.avl.rotations), tree=self.avl.snapshot(), locations=LOCATIONS)
+                        rotations=self.avl.rotations), tree=self.avl.snapshot(depth), locations=LOCATIONS)
 
     def create(self, payload):
         clean = validate(payload)

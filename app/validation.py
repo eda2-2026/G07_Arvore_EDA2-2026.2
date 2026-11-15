@@ -1,5 +1,6 @@
 from datetime import date
 from app.structures.locations import descendants
+from app.categories import CATEGORIES, infer_category
 
 
 def validate(payload):
@@ -12,6 +13,10 @@ def validate(payload):
             raise ValueError(f'Campo {field}: informe entre 1 e {limit} caracteres.')
         result[field] = value.strip()
     descendants(result['location'])
+    category = payload.get('category', infer_category(result['name']))
+    if category not in (*CATEGORIES, 'Outros'):
+        raise ValueError('Categoria inválida.')
+    result['category'] = category
     try:
         result['deadline'] = date.fromisoformat(payload['deadline']).isoformat()
     except (ValueError, TypeError, KeyError):

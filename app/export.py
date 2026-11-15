@@ -6,9 +6,9 @@ import io
 def export_csv(items):
     output = io.StringIO(newline='')
     writer = csv.writer(output, delimiter=';')
-    writer.writerow(['ID', 'Nome', 'Descrição', 'Local', 'Prazo', 'Situação'])
+    writer.writerow(['ID', 'Nome', 'Descrição', 'Local', 'Prazo', 'Situação', 'Categoria'])
     for item in items:
-        values = [item[key] for key in ('id', 'name', 'description', 'location', 'deadline', 'status')]
+        values = [item[key] for key in ('id', 'name', 'description', 'location', 'deadline', 'status')] + [item.get('category', 'Outros')]
         # Impede que nomes e descrições sejam interpretados como fórmulas.
         writer.writerow(["'" + value if isinstance(value, str) and (value.lstrip().startswith(('=', '+', '-', '@')) or value.startswith(('\t', '\r', '\n')))
                          else value for value in values])

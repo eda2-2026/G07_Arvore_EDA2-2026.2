@@ -32,7 +32,7 @@ class StructureTests(unittest.TestCase):
     def test_location_subtrees(self):
         self.assertEqual(descendants('Bloco A'), {'Bloco A', 'Sala A101', 'Laboratório'})
         self.assertEqual(descendants('Quadra'), {'Quadra'})
-        self.assertEqual(len(descendants('Campus')), 12)
+        self.assertEqual(len(descendants('Campus')), 1132)
         with self.assertRaises(ValueError):
             descendants('Inexistente')
 

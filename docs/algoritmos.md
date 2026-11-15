@@ -16,7 +16,7 @@ A busca é por início do nome completo, não por palavras no meio da descriçã
 
 ## Árvore n-ária: mapa do campus
 
-A hierarquia tem 12 locais, contando a raiz Campus. Cada local pode ter vários filhos. DFS encontra o local e reúne os descendentes. Selecionar Bloco A inclui registros no próprio bloco, na Sala A101 e no Laboratório. Custo O(v), sendo v o número de locais; memória auxiliar O(v) no pior caso.
+A hierarquia tem 1.132 locais: os 12 originais e 20 setores com cinco prédios e dez salas por prédio. Os nomes são únicos. Um índice por nome é construído em O(v) ao carregar o módulo; localizar a raiz da subárvore custa O(1) em média e coletar seus s descendentes por DFS custa O(s). Selecionar Bloco A continua incluindo o próprio bloco, Sala A101 e Laboratório. Os novos setores ficam recolhidos na interface.
 
 ## Integração e limitações
 
@@ -26,11 +26,25 @@ Os índices são construídos ao iniciar. Durante o uso, cadastrar insere na Tri
 
 Cada alteração grava o JSON inteiro antes de atualizar os índices. Se a gravação falhar, os índices e os registros anteriores são preservados. A operação isolada da AVL é O(log n), mas a alteração completa custa O(B + n + m + log n), em que B é o tamanho do JSON gravado e m o tamanho dos nomes envolvidos. Ao iniciar, construir os índices custa O(n log n + L), sendo L a soma dos caracteres dos nomes.
 
-O retorno da API inclui um snapshot da AVL completa, com custo O(n), para a visualização didática. Portanto, a requisição HTTP completa não tem custo O(log n + k), mesmo quando a busca isolada por intervalo tem essa complexidade. Consultas por devolvidos/todos registram zero nós visitados na AVL, pois usam a ordenação alternativa.
+O retorno da API inclui um snapshot da AVL limitado à profundidade solicitada (3 a 7 níveis na interface; padrão 5). Os nós da fronteira indicam o tamanho total da subárvore e se há descendentes recolhidos. A árvore de verdade não é truncada. A geração da imagem custa O(min(n, 2^d)), com d níveis. A consulta continua aplicando os filtros sobre os candidatos antes da paginação; a requisição completa não deve ser descrita como O(log n). Consultas por devolvidos/todos registram zero nós visitados na AVL, pois usam ordenação alternativa.
 
 A exportação CSV reaplica os filtros do balcão, preserva acentos com UTF-8 e BOM, usa ponto e vírgula e escapa aspas/quebras de linha. Campos que poderiam ser interpretados como fórmulas por planilhas recebem um apóstrofo inicial.
 
-O servidor atende somente em `127.0.0.1`, sem login ou dependências externas. É uma demonstração local para pequenos conjuntos de dados. Não há controle de acesso, múltiplos processos, recuperação automática de JSON corrompido ou promessa de durabilidade contra queda de energia. A gravação atômica evita arquivos parcialmente substituídos, e um bloqueio serializa consultas e alterações no processo.
+O servidor atende somente em `127.0.0.1`, sem login ou dependências externas. A base padrão possui 12.000 objetos (1.000 por categoria), inicialmente 9.000 guardados e 3.000 devolvidos; o modo `--demo` usa nove. A paginação limita o retorno de objetos, mas a persistência ainda regrava o arquivo todo. Não há controle de acesso, múltiplos processos, recuperação automática de JSON corrompido ou promessa de durabilidade contra queda de energia. A gravação atômica evita arquivos parcialmente substituídos, e um bloqueio serializa consultas e alterações no processo.
+
+## Estatísticas de ordem na AVL
+
+Cada nó mantém `size = 1 + tamanho(esquerda) + tamanho(direita)`, atualizado junto com a altura após inserções, remoções e rotações. `select(k)` encontra a chave da posição k (base zero), descartando subárvores conforme seu tamanho. `rank(chave)` conta as chaves estritamente menores. Ambas custam O(log n) na AVL. A mediana mostrada é a inferior: para quantidade par, escolhemos a primeira das duas posições centrais. Prazos iguais continuam desempatados por ID.
+
+## Laboratório e caminhos
+
+Até 31 inserções e 31 remoções podem ser executadas por experimento. Remoções ocorrem após as inserções e usam a implementação real da AVL. Snapshots independentes preservam a árvore em cada passo; duplicatas e remoções ausentes aparecem como operações sem alteração. A busca calcula o caminho em cada snapshot: dourado indica valores examinados e verde indica o alvo encontrado. Os percursos apresentados são do resultado final; BFS utiliza uma fila `deque`.
+
+## Comparação reproduzível
+
+O benchmark recebe 100, 1.000 ou 5.000 inteiros distintos e um dos quatro cenários: aleatório, ordenado, inverso ou quase ordenado (1% de pares trocados). A semente é 42. AVL e BST recebem a mesma sequência; a busca sequencial usa uma cópia dela. Todas executam os mesmos 100 alvos presentes mais dois ausentes. As respostas são comparadas com uma referência antes do resultado ser exibido.
+
+Uma comparação de construção corresponde a um nó não vazio examinado para inserir uma chave. Na busca, uma visita corresponde a um nó ou valor examinado; não contamos cada operador Python isoladamente. A BST é iterativa para suportar entradas que a transformem em uma cadeia sem exceder a recursão. A busca sequencial não tem altura ou rotações. Seu tempo de construção mede a cópia da lista. Tempos de relógio são observações de uma execução local, variam entre máquinas e não substituem os contadores nem uma análise assintótica.
 
 ## Experimentos sugeridos
 

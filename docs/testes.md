@@ -22,6 +22,12 @@ Os testes usam diretórios temporários e um servidor HTTP em porta escolhida pe
 | HTTP | Recursos estáticos, CRUD, laboratório, JSON inválido, limites, parâmetros e bloqueio de caminhos externos |
 | Laboratório | Snapshots independentes, ordenação, duplicatas e limites de entrada |
 | CSV | Filtros, BOM UTF-8, acentos, aspas, quebras de linha e neutralização de fórmulas |
+| Base ampliada | 12.000 IDs únicos, 1.000 objetos por categoria, determinismo e 1.132 locais válidos |
+| Complementação | Preservação dos nove registros existentes, metas por categoria e segunda execução sem duplicação |
+| Escala | Paginação dos 9.000 guardados, filtros por categoria e limite de nós no snapshot |
+| Estatísticas de ordem | 500 operações com rank e select comparados com conjunto ordenado |
+| Laboratório avançado | Remoções, caminhos, percursos, folhas, mediana e k-ésimo menor |
+| Comparações | Quatro cenários com respostas idênticas, degradação da BST ordenada e validação dos limites |
 
 ## Conferência manual da interface
 
@@ -32,6 +38,9 @@ Os testes usam diretórios temporários e um servidor HTTP em porta escolhida pe
 - Exportar uma busca por `gar` e conferir que o CSV contém somente as duas garrafas.
 - Recarregar a página e reiniciar o processo para conferir a persistência.
 - No laboratório, avançar e voltar nos quatro tipos de rotação.
+- Usar remoções, buscar um valor, conferir o caminho destacado e ajustar o zoom.
+- Comparar os quatro cenários e observar altura e média de visitas, além dos tempos.
+- Na base completa, avançar/voltar páginas e exportar todos os resultados de uma categoria.
 - Reduzir a janela para 390 px e verificar a navegação e o formulário.
 - Tentar um nome contendo marcação HTML e conferir que ele aparece como texto.
 

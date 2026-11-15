@@ -10,12 +10,16 @@ from app.storage import Storage
 from app.service import Service
 from app.lab import experiment
 from app.export import export_csv
+from app.benchmark import benchmark
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def make_server(port=8000, data_path=None):
-    service = Service(Storage(data_path or ROOT / 'data' / 'objetos.json'))
+def make_server(port=8000, data_path=None, demo=False, populate=False):
+    storage = Storage(data_path or ROOT / 'data' / 'objetos.json', demo=demo)
+    if populate:
+        storage.populate()
+    service = Service(storage)
 
     class Handler(BaseHTTPRequestHandler):
         def send_bytes(self, code, data, content_type, attachment=None):
@@ -47,7 +51,13 @@ def make_server(port=8000, data_path=None):
             if parsed.path in ('/api/items', '/api/export'):
                 params = parse_qs(parsed.query, keep_blank_values=True)
                 try:
-                    result = service.listing(**{k: v[-1] for k, v in params.items()})
+                    query = {k: v[-1] for k, v in params.items()}
+                    if parsed.path == '/api/items':
+                        query.setdefault('page', '1')
+                    else:
+                        query.pop('page', None)
+                        query.pop('page_size', None)
+                    result = service.listing(**query)
                     if parsed.path == '/api/export':
                         self.send_bytes(200, export_csv(result['items']), 'text/csv; charset=utf-8', 'reencontra.csv')
                     else:
@@ -72,11 +82,14 @@ def make_server(port=8000, data_path=None):
                 path = urlsplit(self.path).path
                 if path == '/api/items':
                     self.reply(201, service.create(self.body()))
-                elif path == '/api/lab':
+                elif path in ('/api/lab', '/api/benchmark'):
                     payload = self.body()
                     if not isinstance(payload, dict):
                         raise ValueError('Envie um objeto JSON.')
-                    self.reply(200, experiment(payload.get('values')))
+                    if path == '/api/benchmark':
+                        self.reply(200, benchmark(**payload))
+                    else:
+                        self.reply(200, experiment(payload.get('values'), payload.get('removals', []), payload.get('target'), payload.get('position', 1)))
                 else:
                     parts = path.strip('/').split('/')
                     if len(parts) != 4 or parts[:2] != ['api', 'items'] or parts[3] not in ('return', 'delete', 'edit'):
@@ -102,14 +115,17 @@ def main():
     parser = argparse.ArgumentParser(description='Reencontra — achados e perdidos')
     parser.add_argument('--port', type=int, default=8000)
     parser.add_argument('--demo', action='store_true', help='Usa dados temporários novos sem alterar a base salva.')
+    parser.add_argument('--populate', action='store_true', help='Completa mil objetos por categoria na base existente.')
     args = parser.parse_args()
+    if args.demo and args.populate:
+        parser.error('--demo e --populate não podem ser usados juntos.')
     with ExitStack() as stack:
         data_path = None
         if args.demo:
             directory = stack.enter_context(TemporaryDirectory(prefix='reencontra-demo-'))
             data_path = Path(directory) / 'objetos.json'
         try:
-            server = make_server(args.port, data_path)
+            server = make_server(args.port, data_path, demo=args.demo, populate=args.populate)
         except (OSError, ValueError) as exc:
             parser.exit(1, f'Não foi possível iniciar: {exc}\n')
         print(f'Reencontra: http://localhost:{server.server_port} — Ctrl+C para encerrar', flush=True)

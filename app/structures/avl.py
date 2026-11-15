@@ -8,6 +8,7 @@ class Node:
     left: object = None
     right: object = None
     height: int = 1
+    size: int = 1
 
 
 def height(node):
@@ -18,9 +19,11 @@ class AVL:
     def __init__(self):
         self.root = None
         self.rotations = 0
+        self.comparisons = 0
 
     def _update(self, node):
         node.height = 1 + max(height(node.left), height(node.right))
+        node.size = 1 + (node.left.size if node.left else 0) + (node.right.size if node.right else 0)
 
     def _rotate(self, node, left):
         pivot = node.right if left else node.left
@@ -50,6 +53,7 @@ class AVL:
         def visit(node):
             if node is None:
                 return Node(key)
+            self.comparisons += 1
             if key < node.key:
                 node.left = visit(node.left)
             elif key > node.key:
@@ -96,11 +100,49 @@ class AVL:
         visit(self.root)
         return result, visited
 
-    def snapshot(self):
-        def visit(node):
+    def trace(self, key):
+        path, node = [], self.root
+        while node:
+            path.append(node.key)
+            if key == node.key:
+                return path, True
+            node = node.left if key < node.key else node.right
+        return path, False
+
+    def select(self, index):
+        """Retorna a chave de posição zero-based em O(log n), usando tamanhos."""
+        if type(index) is not int or index < 0 or not self.root or index >= self.root.size:
+            raise ValueError('Posição fora da árvore.')
+        node = self.root
+        while node:
+            left = node.left.size if node.left else 0
+            if index == left:
+                return node.key
+            if index < left:
+                node = node.left
+            else:
+                index -= left + 1
+                node = node.right
+
+    def rank(self, key):
+        """Quantidade de chaves estritamente menores que key, em O(log n)."""
+        rank, node = 0, self.root
+        while node:
+            if key <= node.key:
+                node = node.left
+            else:
+                rank += 1 + (node.left.size if node.left else 0)
+                node = node.right
+        return rank
+
+    def snapshot(self, max_depth=None):
+        def visit(node, depth=0):
             if node is None:
                 return None
+            truncated = max_depth is not None and depth >= max_depth - 1
             return dict(key=list(node.key), height=node.height,
+                        size=node.size, truncated=bool(truncated and (node.left or node.right)),
                         balance=height(node.left) - height(node.right),
-                        left=visit(node.left), right=visit(node.right))
+                        left=None if truncated else visit(node.left, depth + 1),
+                        right=None if truncated else visit(node.right, depth + 1))
         return visit(self.root)
