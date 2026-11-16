@@ -204,14 +204,14 @@ A suíte verifica rotações, remoções, balanceamento, consultas por intervalo
 
 Os testes usam arquivos temporários e não modificam a base da aplicação. Escopo completo: [`docs/testes.md`](docs/testes.md). Sugestão de demonstração: [`docs/roteiro.md`](docs/roteiro.md).
 
+## 🎥 Apresentação
 
 <div align="center">
-  <h2>🎥 Apresentação</h2>
+  <a href="https://youtu.be/3Qh7XT6HRRE" target="_blank">
+    <img src="https://img.shields.io/badge/YouTube-Apresenta%C3%A7%C3%A3o-red?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação no YouTube">
+  </a>
 </div>
 
-<div align="center">
-  <img src="https://img.shields.io/badge/YouTube-Apresentação-red?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação no YouTube">
-</div>
 
 
 <div align="center">
